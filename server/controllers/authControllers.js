@@ -27,11 +27,11 @@ export const register = async (req, res) => {
 
         //sending email
 
-        const mailOptions={
-            from:process.env.SENDER_EMAIL,
-            to:email,
-            subject:'fuck you',
-            text:`bhosdi wala bakchod email created ${email}`
+        const mailOptions = {
+            from: process.env.SENDER_EMAIL,
+            to: email,
+            subject: 'fuck you',
+            text: `bhosdi wala bakchod email created ${email}`
         }
         await transporter.sendMail(mailOptions)
         res.json({ success: true, message: 'User Registered Successfully' });
@@ -76,7 +76,7 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
 
     try {
-        
+
         res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -91,30 +91,30 @@ export const logout = async (req, res) => {
 }
 // verify email
 
-export const sendVerifyOtp=async(req,res)=>{
-    try{
-        const userId=req.userId;
-        const user=await userModel.findById(userId)
-        if(user.isAccountVerified){
-            return res.json({success:false,message:"account already verified"})
+export const sendVerifyOtp = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const user = await userModel.findById(userId)
+        if (user.isAccountVerified) {
+            return res.json({ success: false, message: "account already verified" })
         }
 
-        const otp=String(Math.floor(100000+Math.random()*900000))
-        user.verifyOtp=otp;
-        user.verifyOtpExpireAt=Date.now() + 10 * 60 * 1000 // 10 minutes
+        const otp = String(Math.floor(100000 + Math.random() * 900000))
+        user.verifyOtp = otp;
+        user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000 // 10 minutes
         await user.save();
 
-        const mailOptions={
-            from:process.env.SENDER_EMAIL,
-            to:user.email,
-            subject:'account verification otp',
-            text:`Your otp is ${otp}.Verify your acoount using this gudmarani otp`
+        const mailOptions = {
+            from: process.env.SENDER_EMAIL,
+            to: user.email,
+            subject: 'account verification otp',
+            text: `Your otp is ${otp}.Verify your acoount using this gudmarani otp`
         }
         await transporter.sendMail(mailOptions)
-        res.json({success:true,message:'verification otp is sent on the email id'})
+        res.json({ success: true, message: 'verification otp is sent on the email id' })
     }
-    catch(error){
-        res.json({success:false,message:error.message})
+    catch (error) {
+        res.json({ success: false, message: error.message })
     }
 }
 
@@ -140,7 +140,20 @@ export const verifyEmail = async (req, res) => {
             });
         }
 
-        if (user.verifyOtp === '' || user.verifyOtp !== otp) {
+        // Debug logging
+        console.log('=== OTP Verification Debug ===');
+        console.log('Received OTP:', otp, 'Type:', typeof otp, 'Length:', otp.length);
+        console.log('Stored OTP:', user.verifyOtp, 'Type:', typeof user.verifyOtp, 'Length:', user.verifyOtp.length);
+
+        // Convert both to strings and trim for comparison
+        const storedOtp = String(user.verifyOtp).trim();
+        const receivedOtp = String(otp).trim();
+
+        console.log('After trim - Stored:', storedOtp, 'Received:', receivedOtp);
+        console.log('Match:', storedOtp === receivedOtp);
+        console.log('=============================');
+
+        if (!storedOtp || storedOtp === '' || storedOtp !== receivedOtp) {
             return res.json({
                 success: false,
                 message: "Invalid OTP"
@@ -174,72 +187,72 @@ export const verifyEmail = async (req, res) => {
 
 // is autneticated
 
-export const isAuthenticated=async(req,res)=>{
-    try{
-        return res.json({success:true})
+export const isAuthenticated = async (req, res) => {
+    try {
+        return res.json({ success: true })
     }
-    catch(error){
-        res.json({success:false,message:error.message})
+    catch (error) {
+        res.json({ success: false, message: error.message })
     }
 }
 
 //send pass reset otp
-export const sendResetOtp=async(req,res)=>{
-    const{email}=req.body;
-    if(!email){
-        return res.json({success:false,message:"email is required"})
+export const sendResetOtp = async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+        return res.json({ success: false, message: "email is required" })
     }
-    try{
-        const user=await userModel.findOne({email});
-        if(!user){
-            res.json({success:false,message:"user not found"})
+    try {
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            res.json({ success: false, message: "user not found" })
         }
-         const otp=String(Math.floor(100000+Math.random()*900000))
-        user.resetOtp=otp;
-        user.resetOtpExpireAt=Date.now() + 9* 60 * 1000 // 10 minutes
+        const otp = String(Math.floor(100000 + Math.random() * 900000))
+        user.resetOtp = otp;
+        user.resetOtpExpireAt = Date.now() + 9 * 60 * 1000 // 10 minutes
         await user.save();
 
-        const mailOption={
-            from:process.env.SENDER_EMAIL,
-            to:user.email,
-            subject:'Password reset otp otp',
-            text:`ypour opt for resetting your password is ${otp}.use this otp to proceed with resetting your password`
+        const mailOption = {
+            from: process.env.SENDER_EMAIL,
+            to: user.email,
+            subject: 'Password reset otp otp',
+            text: `ypour opt for resetting your password is ${otp}.use this otp to proceed with resetting your password`
         }
         await transporter.sendMail(mailOption)
-        return res.json({success:true,message:"password reset otp sent to your email "})
+        return res.json({ success: true, message: "password reset otp sent to your email " })
     }
-    catch(error){
-        return res.json({success:false,message:error.message})
+    catch (error) {
+        return res.json({ success: false, message: error.message })
     }
 }
 
 
 //reset user password
 
-export const resetPassword=async(req,res)=>{
-    const {email,otp,newPassword}=req.body;
-    if(!email||!otp||!newPassword){
-        return res.json({success:false,message:'email otp and new password is requored'})
+export const resetPassword = async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+        return res.json({ success: false, message: 'email otp and new password is requored' })
     }
-    try{
-        const user=await userModel.findOne({email});
-        if(!user){
-            return res.json({success:false,message:"user not found"})
+    try {
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return res.json({ success: false, message: "user not found" })
         }
-        if(user.resetOtp===''|| user.resetOtp!==otp){
-            return res.json({success:false,message:"invalid otp"})
+        if (user.resetOtp === '' || user.resetOtp !== otp) {
+            return res.json({ success: false, message: "invalid otp" })
         }
-        if(user.resetOtpExpireAt<Date.now()){
-            return res.json({success:false,message:"otp expired"})
+        if (user.resetOtpExpireAt < Date.now()) {
+            return res.json({ success: false, message: "otp expired" })
         }
-        const hashedPassword=await bcrypt.hash(newPassword,10);
-        user.password=hashedPassword;
-        user.resetOtp='';
-        user.resetOtpExpireAt=0;
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        user.resetOtp = '';
+        user.resetOtpExpireAt = 0;
         await user.save();
-        return res.json({success:true,message:"password has been changed successfully"})
+        return res.json({ success: true, message: "password has been changed successfully" })
     }
-    catch(error){
-        return res.json({success:false,message:error.message})
+    catch (error) {
+        return res.json({ success: false, message: error.message })
     }
 }
